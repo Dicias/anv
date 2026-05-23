@@ -4,20 +4,198 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Constelación Interactiva</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* === ESTILOS GLOBALES === */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            height: 100vh;
+        }
+
+        /* === FONDO DE ESTRELLAS === */
+        .bg-star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            z-index: -1;
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.1; }
+            100% { opacity: 1; }
+        }
+
+        /* === CONTENEDOR DEL JUEGO === */
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 800px; /* Limita el ancho para que el corazón no se estire demasiado en PC */
+            margin: 0 auto;
+        }
+
+        svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        line {
+            stroke: #ff9a9e;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 5px #ff9a9e);
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            animation: drawLine 1s ease-out forwards;
+        }
+
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* === ESTRELLAS JUGABLES === */
+        .star {
+            position: absolute;
+            width: 30px; height: 30px;
+            background: white;
+            /* Esto recorta el div con la forma de una estrella de 5 puntas */
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        /* Cuando usamos clip-path, box-shadow no funciona bien. Usamos filter: drop-shadow en su lugar */
+        .star-wrapper {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .star.inactive {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .star.active {
+            cursor: pointer;
+            background: #fff;
+            filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 15px #ffeb3b);
+            animation: pulseStar 1.5s infinite;
+        }
+
+        .star.completed {
+            background: #ff9a9e;
+            filter: drop-shadow(0 0 6px #ff9a9e);
+        }
+
+        @keyframes pulseStar {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.3); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* === MODALES === */
+        .hidden { display: none !important; }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: #1e1e2f;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #333;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .glow-box {
+            box-shadow: 0 0 20px rgba(255, 154, 158, 0.4);
+        }
+
+        /* Cuadrícula para las 4 opciones */
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .option-btn {
+            padding: 15px;
+            cursor: pointer;
+            border: 1px solid #ff9a9e;
+            background: rgba(255, 154, 158, 0.1);
+            color: #ff9a9e;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .option-btn:hover {
+            background: #ff9a9e;
+            color: #1e1e2f;
+        }
+
+        /* Reglas del juego alineadas a la izquierda */
+        .rules-list {
+            text-align: left;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #ccc;
+        }
+
+        .final-box h1 { color: #ff9a9e; font-size: 2.5rem; margin-bottom: 10px; }
+        
+        @media (max-width: 500px) {
+            .options { grid-template-columns: 1fr; } /* En celulares se ven en una sola columna */
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Fondo de estrellas dinámico -->
+    <!-- Fondo de estrellas -->
     <div id="space-background"></div>
 
-    <!-- Contenedor del Juego -->
     <div class="game-container">
         <!-- SVG para dibujar las líneas -->
         <svg id="constellation-lines"></svg>
         
-        <!-- Las estrellas se inyectarán aquí con JavaScript -->
+        <!-- Contenedor de las estrellas -->
         <div id="stars-container"></div>
+    </div>
+
+    <!-- Modal de Inicio (Reglas) -->
+    <div id="modal-intro" class="modal">
+        <div class="modal-content glow-box">
+            <h2>✨ FELIZ ANIVERSARIO ✨</h2>
+            <div class="rules-list">
+                <p>🔭 <b>1.</b> Te tengo una sorpresa por cumplir un año juntos</p>
+                <p>⭐ <b>2.</b> Para desbloquear la sorpresa, debes responder correctamente a las preguntas.</p>
+                <p>☄️ <b>3.</b> Pero fallas, la última conexión se romperá y tendrás que retroceder un paso.</p>
+                <p>💖 <b>4.</b> Completa todas las preguntas para descubrir tu sorpresa.</p>
+                <p>💖</b> Suerte, te amo.</p>
+            </div>
+            <button id="start-btn" class="option-btn" style="width: 100%;">¡Comenzar!</button>
+        </div>
     </div>
 
     <!-- Modal de Pregunta -->
@@ -25,13 +203,15 @@
         <div class="modal-content glow-box">
             <h2 id="question-text">Pregunta</h2>
             <div class="options">
+                <button class="option-btn" id="opt-0"></button>
                 <button class="option-btn" id="opt-1"></button>
                 <button class="option-btn" id="opt-2"></button>
+                <button class="option-btn" id="opt-3"></button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Feedback (Reemplaza al Alert) -->
+    <!-- Modal de Feedback (Correcto/Incorrecto) -->
     <div id="modal-feedback" class="modal hidden">
         <div class="modal-content">
             <h2 id="feedback-text">¡Correcto!</h2>
@@ -41,15 +221,189 @@
     <!-- Modal Final -->
     <div id="modal-final" class="modal hidden">
         <div class="modal-content glow-box final-box">
-            <h1>¡Felicidades! 💖</h1>
-            <p>Has completado la constelación.</p>
+            <h1>¡Quién la viera, sí supo! 💖</h1>
+            <p>Por completar todas las preguntas te ganaste...</p>
             <div class="invitation">
-                <h2>ESTÁS INVITADO A: [TU EVENTO]</h2>
-                <p>El premio por tu esfuerzo te espera.</p>
+                <h2 style="color: white; margin-top: 30px;">UNA CITA ARRIESGANDO NUESTRAS VIDAS:</h2>
+                <p style="font-size: 1.2rem; color: #a8ff78;">El día 24 de Mayo</p>
+                <p style="color: #ccc;">Pasaran por ti a las 3:50 A.M.</p>
+                <p style="color: #ccc;">Recuerda llevar chamarra, gorra y tu INE.</p>
+                <p style="color: #ccc;">Gracias por participar, nos vemos el domingo. TE AMO❤️ </p>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Posiciones del corazón
+        const heartPositions = [
+            { x: 50, y: 25 },
+            { x: 68, y: 15 },
+            { x: 88, y: 22 },
+            { x: 92, y: 42 },
+            { x: 80, y: 65 },
+            { x: 65, y: 80 },
+            { x: 50, y: 95 },
+            { x: 35, y: 80 },
+            { x: 20, y: 65 },
+            { x: 8,  y: 42 },
+            { x: 12, y: 22 },
+            { x: 32, y: 15 }
+        ];
+
+        // 12 Preguntas, cada una con 4 opciones. 'correct' es el índice (0, 1, 2 o 3) de la respuesta correcta.
+        const questions = [
+            { q: "¿Dónde nos conocimos?", a: ["En el conservatorio", "En la escuela", "Cuando te rescate en Nueva York (soy spiderman)", "En la luna"], correct: 2 },
+            { q: "¿A donde fuimos el 20 de Julio?", a: ["A Toluca", "A ver al duko", "A conocer a Luca", "A patinar"], correct: 2 },
+            { q: "¿A los cuantos años te di una oportunidad?", a: ["8 añotes", "1 año", "Aún no, me estoy esperando", "Al día uno"], correct: 0 },
+            { q: "¿Cuál es nuestra canción?", a: ["HELLO COTTO DUKI", "2 AM", "SECUNENA (si escoges esta tenemos que hablar)", "Odio amarte Hash"], correct: 1 },
+            { q: "Número total de discuciones", a: ["Ninguna", "Más de 100", "6", "Quién lleva la cuenta?"], correct: 2 },
+            { q: "¿Qué no puede faltar en un viaje?", a: ["Cereal en bolsa", "Latin Mafia en la bocina", "Que el carro no arranque JAJAJA", "Una Valeria en la cajuela"], correct: 3 },
+            { q: "¿Qué haría yo sin ti?", a: ["Curar la poleo", "Clonarte", "Tener una novia fea", "No sé, eso ya no pasa"], correct: 0 },
+            { q: "¿Qué pueblo no volvemos a visitar?", a: ["Toluca", "Todas las opciones", "Cadereyta", "Ezequiel Montes"], correct: 1 },
+            { q: "El mejor concierto al que hemos ido es...", a: ["El de Duki obviamente", "Latin Mafia", "Al de Zoe (jajaja :c)", "El de Bad Bunny"], correct: 0 },
+            { q: "Quién siempre tiene la razón", a: ["Ale", "El guapo de la relación", "EL novio obvio microbio", "La vale (no)"], correct: 3 },
+            { q: "¿Cuál es nuestra definición de cita?", a: ["Visitar museos", "Ir al teatro", "Catar vinos", "Arriesgar nuestra vida por 50 varos en la feria"], correct: 3 },
+            { q: "¿Por cuantos años vas a renovar el contrato?", a: ["Ya no voy a renovar", "Voy a firmar la permanencia", "Checamos...", "1 año na más"], correct: 1 }
+        ];
+
+        let currentLevel = 0;
+
+        const starsContainer = document.getElementById('stars-container');
+        const svgContainer = document.getElementById('constellation-lines');
+        
+        const modalIntro = document.getElementById('modal-intro');
+        const modalQuestion = document.getElementById('modal-question');
+        const modalFeedback = document.getElementById('modal-feedback');
+        const modalFinal = document.getElementById('modal-final');
+        
+        const questionTxt = document.getElementById('question-text');
+        const feedbackTxt = document.getElementById('feedback-text');
+        
+        // Array con los 4 botones de opciones
+        const optionsBtns = [
+            document.getElementById('opt-0'),
+            document.getElementById('opt-1'),
+            document.getElementById('opt-2'),
+            document.getElementById('opt-3')
+        ];
+
+        // --- INICIALIZACIÓN ---
+
+        // 1. Quitar el modal de intro al hacer clic en comenzar
+        document.getElementById('start-btn').addEventListener('click', () => {
+            modalIntro.classList.add('hidden');
+        });
+
+        // 2. Generar fondo de estrellas aleatorias
+        for (let i = 0; i < 150; i++) {
+            const bgStar = document.createElement('div');
+            bgStar.className = 'bg-star';
+            bgStar.style.left = Math.random() * 100 + 'vw';
+            bgStar.style.top = Math.random() * 100 + 'vh';
+            bgStar.style.width = bgStar.style.height = (Math.random() * 2 + 1) + 'px';
+            bgStar.style.animationDelay = Math.random() * 2 + 's';
+            document.getElementById('space-background').appendChild(bgStar);
+        }
+
+        // 3. Dibujar las 12 estrellas
+        heartPositions.forEach((pos, index) => {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.id = `star-${index}`;
+            star.style.left = `${pos.x}%`;
+            star.style.top = `${pos.y}%`;
+            
+            star.addEventListener('click', () => {
+                if (index === currentLevel) openQuestion(index);
+            });
+            
+            starsContainer.appendChild(star);
+        });
+
+        updateUI();
+
+        // --- LÓGICA DEL JUEGO ---
+
+        function openQuestion(index) {
+            const data = questions[index];
+            questionTxt.innerText = data.q;
+            
+            // Llenar los 4 botones y asignarles eventos
+            optionsBtns.forEach((btn, i) => {
+                btn.innerText = data.a[i];
+                btn.onclick = () => checkAnswer(i);
+            });
+            
+            modalQuestion.classList.remove('hidden');
+        }
+
+        function checkAnswer(selectedIndex) {
+            modalQuestion.classList.add('hidden');
+            const isCorrect = selectedIndex === questions[currentLevel].correct;
+
+            if (isCorrect) {
+                feedbackTxt.innerText = "¡Correcto! ⭐";
+                feedbackTxt.style.color = "#a8ff78";
+            } else {
+                feedbackTxt.innerText = "Incorrecto... ☄️";
+                feedbackTxt.style.color = "#ff4b2b";
+            }
+            
+            modalFeedback.classList.remove('hidden');
+
+            setTimeout(() => {
+                modalFeedback.classList.add('hidden');
+                
+                if (isCorrect) {
+                    drawConnection(currentLevel);
+                    currentLevel++;
+                    updateUI();
+                    
+                    if (currentLevel === 12) {
+                        setTimeout(() => modalFinal.classList.remove('hidden'), 1000);
+                    }
+                } else {
+                    if (currentLevel > 0) {
+                        removeLastConnection();
+                        currentLevel--;
+                    }
+                    updateUI();
+                }
+            }, 1500);
+        }
+
+        function drawConnection(level) {
+            const p1 = heartPositions[level];
+            const p2 = heartPositions[(level + 1) % 12];
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', `${p1.x}%`);
+            line.setAttribute('y1', `${p1.y}%`);
+            line.setAttribute('x2', `${p2.x}%`);
+            line.setAttribute('y2', `${p2.y}%`);
+            line.setAttribute('id', `line-${level}`);
+            svgContainer.appendChild(line);
+        }
+
+        function removeLastConnection() {
+            const lineToRemove = document.getElementById(`line-${currentLevel - 1}`);
+            if (lineToRemove) lineToRemove.remove();
+        }
+
+        function updateUI() {
+            for (let i = 0; i < 12; i++) {
+                const star = document.getElementById(`star-${i}`);
+                star.className = 'star'; // Resetear todas las clases extras
+                
+                if (i < currentLevel) {
+                    star.classList.add('completed');
+                } else if (i === currentLevel) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.add('inactive');
+                }
+            }
+        }
+    </script>
 </body>
 </html>
