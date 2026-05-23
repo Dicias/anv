@@ -1,44 +1,135 @@
 body {
-    font-family: sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: #f0f2f5;
     margin: 0;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+    font-family: sans-serif;
+    color: white;
+    height: 100vh;
 }
 
+/* Estrellitas pequeñas de fondo */
+.bg-star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    z-index: -1;
+    animation: twinkle 2s infinite alternate;
+}
+
+@keyframes twinkle {
+    0% { opacity: 0.2; }
+    100% { opacity: 1; }
+}
+
+/* Contenedor principal */
+.game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; /* Para que los clicks pasen a las estrellas */
+    z-index: 1;
+}
+
+/* Líneas brillantes */
+line {
+    stroke: #ff9a9e;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 8px #ff9a9e);
+    stroke-dasharray: 2000;
+    stroke-dashoffset: 2000;
+    animation: drawLine 1s ease-out forwards;
+}
+
+@keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+}
+
+/* Estrellas jugables */
+.star {
+    position: absolute;
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%); /* Centrar en su coordenada */
+    z-index: 2;
+    transition: all 0.3s;
+}
+
+.star.inactive {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.star.active {
+    cursor: pointer;
+    background: #fff;
+    box-shadow: 0 0 20px #fff, 0 0 40px #ffeb3b;
+    animation: pulse 1.5s infinite;
+}
+
+.star.completed {
+    background: #ff9a9e;
+    box-shadow: 0 0 15px #ff9a9e;
+}
+
+@keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.4); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Modales */
 .hidden { display: none !important; }
 
 .modal {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 10;
 }
 
 .modal-content {
-    background: white;
+    background: #1e1e2f;
     padding: 2rem;
-    border-radius: 10px;
+    border-radius: 15px;
     text-align: center;
+    border: 1px solid #333;
+}
+
+.glow-box {
+    box-shadow: 0 0 20px rgba(255, 154, 158, 0.4);
 }
 
 .options {
     display: flex;
-    gap: 10px;
+    justify-content: center;
+    gap: 15px;
     margin-top: 20px;
 }
 
 .option-btn {
     padding: 10px 20px;
     cursor: pointer;
-    border: none;
-    background: #007bff;
-    color: white;
-    border-radius: 5px;
+    border: 1px solid #ff9a9e;
+    background: transparent;
+    color: #ff9a9e;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: 0.3s;
 }
 
-.option-btn:hover { background: #0056b3; }
+.option-btn:hover {
+    background: #ff9a9e;
+    color: #1e1e2f;
+}
+
+.final-box h1 { color: #ff9a9e; }

@@ -3,27 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desafío de los 12 Niveles</title>
+    <title>Constelación Interactiva</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- Fondo de estrellas dinámico -->
+    <div id="space-background"></div>
+
+    <!-- Contenedor del Juego -->
     <div class="game-container">
-        <h1>Nivel Actual: <span id="level-number">1</span>/12</h1>
-        <div class="map-visual">
-            <!-- Aquí podrías dibujar círculos o una barra de progreso -->
-            <div id="progress-bar"></div>
-        </div>
-        <button id="open-challenge">Abrir Desafío</button>
+        <!-- SVG para dibujar las líneas -->
+        <svg id="constellation-lines"></svg>
+        
+        <!-- Las estrellas se inyectarán aquí con JavaScript -->
+        <div id="stars-container"></div>
     </div>
 
-    <!-- Modal -->
-    <div id="modal" class="modal hidden">
-        <div class="modal-content">
-            <h2 id="question-text">Pregunta aquí</h2>
+    <!-- Modal de Pregunta -->
+    <div id="modal-question" class="modal hidden">
+        <div class="modal-content glow-box">
+            <h2 id="question-text">Pregunta</h2>
             <div class="options">
                 <button class="option-btn" id="opt-1"></button>
                 <button class="option-btn" id="opt-2"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Feedback (Reemplaza al Alert) -->
+    <div id="modal-feedback" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="feedback-text">¡Correcto!</h2>
+        </div>
+    </div>
+
+    <!-- Modal Final -->
+    <div id="modal-final" class="modal hidden">
+        <div class="modal-content glow-box final-box">
+            <h1>¡Felicidades! 💖</h1>
+            <p>Has completado la constelación.</p>
+            <div class="invitation">
+                <h2>ESTÁS INVITADO A: [TU EVENTO]</h2>
+                <p>El premio por tu esfuerzo te espera.</p>
             </div>
         </div>
     </div>
